@@ -1,28 +1,40 @@
+// src/repositories/TokenListingRepository.js
 const db = require('../database/db');
 
 class TokenListingRepository {
+  async create(data) {
+    const [listing] = await db('token_listings')
+      .insert({
+        ...data,
+        investor_eligibility: JSON.stringify(data.investor_eligibility || {}),
+        esg_details: JSON.stringify(data.esg_details || {})
+      })
+      .returning('*');
+    return listing;
+  }
+
+  async findById(id) {
+    return db('token_listings').where({ id }).first();
+  }
+
   async findAll(filters = {}, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
     let query = db('token_listings');
 
     if (filters.status) query.where('status', filters.status);
-    if (filters.minEsgScore) query.where('esg_score', '>=', filters.minEsgScore);
-    if (filters.assetType) {
-      query.join('assets', 'token_listings.asset_id', '=', 'assets.id')
-           .where('assets.type', filters.assetType);
-    }
+    if (filters.listing_type) query.where('listing_type', filters.listing_type);
+    if (filters.asset_id) query.where('asset_id', filters.asset_id);
 
-    const [listings, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       query.clone()
-        .select('token_listings.*')
-        .orderBy('listing_date', 'desc')
+        .orderBy('created_at', 'desc')
         .limit(limit)
         .offset(offset),
       query.clone().count('* as total').first()
     ]);
 
     return {
-      data: listings,
+      data,
       pagination: {
         total: Number(total.total),
         page,
@@ -32,27 +44,8 @@ class TokenListingRepository {
     };
   }
 
-  async findById(id) {
-    return db('token_listings').where({ id }).first();
-  }
-
-  async create(listingData) {
-    const insertData = {
-      ...listingData,
-      investor_eligibility: JSON.stringify(listingData.investor_eligibility || {}),
-      esg_details: JSON.stringify(listingData.esg_details || {})
-    };
-
-    const [listing] = await db('token_listings')
-      .insert(insertData)
-      .returning('*');
-
-    return listing;
-  }
-
   async update(id, updates) {
     const data = { ...updates };
-
     if (data.investor_eligibility) {
       data.investor_eligibility = JSON.stringify(data.investor_eligibility);
     }
@@ -64,7 +57,6 @@ class TokenListingRepository {
       .where({ id })
       .update(data)
       .returning('*');
-
     return updated;
   }
 
