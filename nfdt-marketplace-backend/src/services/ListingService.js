@@ -3,10 +3,14 @@
 const TokenListingRepository = require('../repositories/TokenListingRepository');
 const AssetRepository = require('../repositories/AssetRepository');
 
+// ✅ 正确：Repository 是 class，要 new
+const tokenListingRepo = new TokenListingRepository();
+const assetRepo = new AssetRepository();
+
 class ListingService {
   /**
    * 市场公开 listings
-   * 用于：GET /api/v1/listings
+   * GET /api/v1/listings
    */
   async getMarketListings(query = {}) {
     const {
@@ -28,8 +32,8 @@ class ListingService {
       filters.assetType = assetType;
     }
 
-    // Repository 层负责 SQL & join
-    return TokenListingRepository.findAll(
+    // ✅ 用 instance
+    return tokenListingRepo.findAll(
       filters,
       Number(page),
       Number(limit),
@@ -39,10 +43,10 @@ class ListingService {
 
   /**
    * listing 详情（含 asset）
-   * 用于：GET /api/v1/listings/:id
+   * GET /api/v1/listings/:id
    */
   async getListingDetail(listingId) {
-    const listing = await TokenListingRepository.findById(listingId);
+    const listing = await tokenListingRepo.findById(listingId);
 
     if (!listing) {
       const err = new Error('Listing not found');
@@ -50,7 +54,7 @@ class ListingService {
       throw err;
     }
 
-    const asset = await AssetRepository.findById(listing.asset_id);
+    const asset = await assetRepo.findById(listing.asset_id);
 
     return {
       ...listing,
@@ -61,14 +65,14 @@ class ListingService {
   }
 
   /**
-   * Admin 创建 listing（上架申请）
-   * 用于：POST /api/v1/admin/listings
+   * Admin 创建 listing
+   * POST /api/v1/admin/listings
    */
   async createListing(data, user) {
     this._assertAdmin(user);
     this._validateListingData(data);
 
-    return TokenListingRepository.create({
+    return tokenListingRepo.create({
       ...data,
       status: 'PENDING_REVIEW',
       listing_date: null
@@ -77,12 +81,12 @@ class ListingService {
 
   /**
    * Admin 更新 listing
-   * 用于：PUT /api/v1/admin/listings/:id
+   * PUT /api/v1/admin/listings/:id
    */
   async updateListing(listingId, updates, user) {
     this._assertAdmin(user);
 
-    const updated = await TokenListingRepository.update(listingId, updates);
+    const updated = await tokenListingRepo.update(listingId, updates);
 
     if (!updated) {
       const err = new Error('Listing not found');
@@ -95,15 +99,15 @@ class ListingService {
 
   /**
    * Admin 删除 listing
-   * 用于：DELETE /api/v1/admin/listings/:id
+   * DELETE /api/v1/admin/listings/:id
    */
   async deleteListing(listingId, user) {
     this._assertAdmin(user);
-    await TokenListingRepository.delete(listingId);
+    await tokenListingRepo.delete(listingId);
   }
 
   /* ===========================
-   * 内部工具函数（私有）
+   * 内部工具函数
    * =========================== */
 
   _assertAdmin(user) {

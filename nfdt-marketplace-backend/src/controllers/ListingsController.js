@@ -1,5 +1,7 @@
 // src/controllers/ListingsController.js
-const ListingService = require('../services/ListingService');
+const db = require('../database/db');
+const TokenListingRepository = require('../repositories/TokenListingRepository');
+
 
 class ListingsController {
   // GET /api/v1/listings

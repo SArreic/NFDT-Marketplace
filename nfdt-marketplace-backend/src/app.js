@@ -121,13 +121,16 @@ app.post('/api/test/seed', async (req, res) => {
 
 // 检查路由文件是否存在，如果存在则加载
 let routes;
+let routesLoadError = null;
+
 try {
   routes = require('./routes');
   app.use('/api/v1', routes);
   console.log('✅ Routes loaded successfully');
-} catch (error) {
-  console.log('⚠️  Routes not found, using direct endpoints only');
-  console.log('   Run: mkdir -p src/routes && touch src/routes/index.js');
+} catch (err) {
+  routesLoadError = err;
+  console.error('❌ Failed to load routes:', err.message);
+  console.error(err.stack);
 }
 
 // ==================== 错误处理 ====================
@@ -187,8 +190,10 @@ db.raw('SELECT 1 as connection_test')
         console.log(`   GET  http://localhost:${PORT}/api/v1/listings/:id`);
         console.log(`   POST http://localhost:${PORT}/api/v1/listings/admin`);
       } else {
-        console.log('\n⚠️  New routes not configured');
-        console.log('   To enable: create src/routes/index.js');
+        console.log('\n⚠️  Routes not loaded');
+  if (routesLoadError) {
+    console.log('Reason:', routesLoadError.message);
+  }
       }
       console.log('='.repeat(50));
     });

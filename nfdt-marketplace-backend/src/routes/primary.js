@@ -1,11 +1,10 @@
 // src/routes/primary.js
-
 const express = require('express');
 const router = express.Router();
 
-const PrimaryTradeController = require('../controllers/PrimaryTradeController');
+const controller = require('../controllers/PrimaryTradeController');
 
-router.post('/buy', PrimaryTradeController.buy);
-router.get('/orders', PrimaryTradeController.getMyOrders);
+router.post('/buy', controller.buy.bind(controller));
+router.get('/orders', controller.getMyOrders.bind(controller));
 
 module.exports = router;

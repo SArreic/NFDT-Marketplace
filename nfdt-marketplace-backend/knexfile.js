@@ -1,6 +1,8 @@
-// nfdt-marketplace-backend\knexfile.js
+// nfdt-marketplace-backend/knexfile.js
 require('dotenv').config();
 const path = require('path');
+
+const MIGRATIONS_DIR = path.join(__dirname, 'src/database/migrations');
 
 module.exports = {
   development: {
@@ -13,15 +15,12 @@ module.exports = {
       database: process.env.DB_NAME || 'nfdt_marketplace',
     },
     migrations: {
-      directory: path.join(__dirname, 'migrations'),
+      directory: MIGRATIONS_DIR,
       tableName: 'knex_migrations',
-    },
-    seeds: {
-      directory: path.join(__dirname, 'seeds'),
     },
     debug: true,
   },
-  
+
   staging: {
     client: 'pg',
     connection: {
@@ -31,10 +30,10 @@ module.exports = {
       database: process.env.DB_NAME,
     },
     migrations: {
-      directory: path.join(__dirname, 'migrations'),
+      directory: MIGRATIONS_DIR,
     },
   },
-  
+
   production: {
     client: 'pg',
     connection: {
@@ -44,7 +43,7 @@ module.exports = {
       database: process.env.DB_NAME,
     },
     migrations: {
-      directory: path.join(__dirname, 'migrations'),
+      directory: MIGRATIONS_DIR,
     },
   },
 };
